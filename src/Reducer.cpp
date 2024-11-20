@@ -6,7 +6,7 @@ using namespace std;
 
 
 Reducer::Reducer(int id, pthread_barrier_t *reducer_barrier,
-                 std::vector<std::map<std::string, int>> &mappers_result):
+                 std::vector<std::map<std::string, std::set<int>>> &mappers_result):
                 mappers_result(mappers_result) {
     this->id = id;
     this->reducer_barrier = reducer_barrier;
@@ -24,11 +24,20 @@ void Reducer::execute_reduce() {
 
     printf("Hello from reducer <%d>.\n", id);
 
-    if (id == 0) {
-        printf("Reducer 0 checks mappers results.\n");
-        for (int i = 0; i < mappers_result.size(); i++) {
-            cout << "Results of mapper [" << i << "]: ";
-            cout << "mapper_" << i << "[tudor] = " << mappers_result[i]["tudor"] << "\n";
-        }
-    }
+    // if (id == 0) {
+    //     printf("Reducer 0 checks mappers results.\n");
+    //     for (int i = 0; i < mappers_result.size(); i++) {
+    //         cout << "Results of mapper[" << i << "]:\n";
+    //
+    //         for (const auto &[key, value] : mappers_result[i]) {
+    //             cout << key << ": [";
+    //
+    //             for (auto &nr : value) {
+    //                 cout << nr << ", ";
+    //             }
+    //             cout << "]\n";
+    //         }
+    //         cout <<"\n";
+    //     }
+    // }
 }

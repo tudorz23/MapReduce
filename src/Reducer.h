@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <set>
 
 
 class Reducer {
@@ -12,14 +13,14 @@ public:
     int id;
     pthread_barrier_t *reducer_barrier;
 
-    std::vector<std::map<std::string, int>> &mappers_result;
+    std::vector<std::map<std::string, std::set<int>>> &mappers_result;
 
 
 
 public:
     // Constructor
     Reducer(int id, pthread_barrier_t *reducer_barrier,
-            std::vector<std::map<std::string, int>> &mappers_result);
+            std::vector<std::map<std::string, std::set<int>>> &mappers_result);
 
     // Destructor
     ~Reducer();

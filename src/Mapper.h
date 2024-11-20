@@ -5,13 +5,14 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <set>
 
 class Mapper {
 public:
     int id;
     pthread_barrier_t *reducer_barrier;
 
-    std::map<std::string, int> &result;
+    std::map<std::string, std::set<int>> &result;
 
     std::vector<std::string> &files;
     std::vector<pthread_mutex_t*> &file_mutexes;
@@ -20,7 +21,8 @@ public:
 
 public:
     // Constructor
-    Mapper(int id, pthread_barrier_t *reducer_barrier, std::map<std::string, int> &result,
+    Mapper(int id, pthread_barrier_t *reducer_barrier,
+            std::map<std::string, std::set<int>> &result,
             std::vector<std::string> &files, std::vector<pthread_mutex_t*> &file_mutexes,
             std::vector<bool> &parsed_file);
 
@@ -29,6 +31,8 @@ public:
 
 
     void execute_map();
+
+    void parse_file(const int index);
 };
 
 

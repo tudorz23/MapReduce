@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <vector>
 #include <map>
+#include <set>
 #include <fstream>
 
 #include "Mapper.h"
@@ -50,6 +51,7 @@ void get_input_files(const string& user_file, vector<string> &files) {
 }
 
 
+// TODO: Check if memory allocations succeeded.
 int main(int argc, char **argv) {
     // Get the number of mappers and the number of reducers.
     if (argc != 4) {
@@ -81,7 +83,7 @@ int main(int argc, char **argv) {
 
     // Create one mutex for each file to dynamically split them to mappers.
     vector<pthread_mutex_t*> file_mutexes;
-    for (int i = 0; i < files.size(); i++) {
+    for (unsigned long int i = 0; i < files.size(); i++) {
         pthread_mutex_t *mutex = new pthread_mutex_t;
         pthread_mutex_init(mutex, NULL);
         file_mutexes.push_back(mutex);
@@ -96,9 +98,9 @@ int main(int argc, char **argv) {
 
 
     // Create the mappers result array, where each mapper will place its result.
-    vector<map<string, int>> mappers_result;
+    vector<map<string, set<int>>> mappers_result;
     for (int i = 0; i < mappers_cnt; i++) {
-        map<string, int> result;
+        map<string, set<int>> result;
         mappers_result.push_back(result);
     }
 
@@ -119,14 +121,7 @@ int main(int argc, char **argv) {
     }
 
     // Allocate memory for the array of threads.
-    pthread_t *threads;
-    try {
-        threads = new pthread_t[mappers_cnt + reducers_cnt];
-    } catch (bad_alloc &exception) {
-        fprintf(stderr, "Allocation failed.\n");
-        exit(-1);
-    }
-
+    pthread_t *threads = new pthread_t[mappers_cnt + reducers_cnt];
 
     // Launch the worker threads.
     for (int i = 0; i < mappers_cnt + reducers_cnt; i++) {
@@ -156,7 +151,7 @@ int main(int argc, char **argv) {
 
 
     int checkParsed = false;
-    for (int i = 0; i < files.size(); i++) {
+    for (unsigned long int i = 0; i < files.size(); i++) {
         if (!parsed_file[i]) {
             checkParsed = true;
             cout << "File " << i << " not parsed\n";
