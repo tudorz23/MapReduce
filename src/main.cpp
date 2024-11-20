@@ -82,9 +82,9 @@ int main(int argc, char **argv) {
     // Create one mutex for each file to dynamically split them to mappers.
     vector<pthread_mutex_t*> file_mutexes;
     for (int i = 0; i < files.size(); i++) {
-        pthread_mutex_t mutex;
-        pthread_mutex_init(&mutex, NULL);
-        file_mutexes.push_back(&mutex);
+        pthread_mutex_t *mutex = new pthread_mutex_t;
+        pthread_mutex_init(mutex, NULL);
+        file_mutexes.push_back(mutex);
     }
 
     vector<bool> parsed_file(files.size(), false);
@@ -127,7 +127,6 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    cout << "GOT HERE\n";
 
     // Launch the worker threads.
     for (int i = 0; i < mappers_cnt + reducers_cnt; i++) {
@@ -171,27 +170,20 @@ int main(int argc, char **argv) {
     // Free resources.
     delete[] threads;
 
-    for (pthread_mutex_t* mutex : file_mutexes) {
-        pthread_mutex_destroy(mutex);
+    for (Mapper *mapper : mappers) {
+        delete mapper;
     }
 
-    for (long unsigned int i = 0; i < mappers.size(); i++) {
-        delete mappers[i];
-    }
-
-    for (long unsigned int i = 0; i < reducers.size(); i++) {
-        delete reducers[i];
+    for (Reducer *reducer : reducers) {
+        delete reducer;
     }
 
     pthread_barrier_destroy(&reducer_barrier);
 
-
-    // for (int i = 0; i < mappers_cnt; i++) {
-    //     cout << "Results of mapper_" << i << ": ";
-    //     cout << "mapper_" << i << "[tudor] = " << mappers_result[i]["tudor"] << "\n";
-    // }
-
-
+    for (pthread_mutex_t* mutex : file_mutexes) {
+        pthread_mutex_destroy(mutex);
+        delete mutex;
+    }
 
     return 0;
 }
