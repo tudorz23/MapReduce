@@ -51,14 +51,14 @@ void get_input_files(const string& user_file, vector<string> &files) {
 
 
 int main(int argc, char **argv) {
-    // Return code used for every function return code check.
-    int r;
-
     // Get the number of mappers and the number of reducers.
     if (argc != 4) {
         cout << "Usage: " << argv[0] << " <MAPPERS_CNT> <REDUCERS_CNT> <INPUT_FILE>\n";
         exit(-1);
     }
+
+    // Return code used for every function return code check.
+    int r;
 
     int mappers_cnt;
     r = sscanf(argv[1], "%d", &mappers_cnt);
@@ -78,12 +78,16 @@ int main(int argc, char **argv) {
     vector<string> files;
     get_input_files(argv[3], files);
 
-    cout << "File cnt: " << files.size() << "\n";
-    for (const string& file : files) {
-        cout << "in for: ";
-        cout << file << "\n";
+
+    // Create one mutex for each file to dynamically split them to mappers.
+    vector<pthread_mutex_t*> file_mutexes;
+    for (int i = 0; i < files.size(); i++) {
+        pthread_mutex_t mutex;
+        pthread_mutex_init(&mutex, NULL);
+        file_mutexes.push_back(&mutex);
     }
-    cout << "\n";
+
+    vector<bool> parsed_file(files.size(), false);
 
 
     // Barrier that doesn't allow reducers to start before all the mappers finish.
@@ -91,7 +95,7 @@ int main(int argc, char **argv) {
     pthread_barrier_init(&reducer_barrier, NULL, mappers_cnt + reducers_cnt);
 
 
-    // Create the mappers result array.
+    // Create the mappers result array, where each mapper will place its result.
     vector<map<string, int>> mappers_result;
     for (int i = 0; i < mappers_cnt; i++) {
         map<string, int> result;
@@ -102,7 +106,8 @@ int main(int argc, char **argv) {
     // Create mapper objects.
     vector<Mapper*> mappers;
     for (int i = 0; i < mappers_cnt; i++) {
-        Mapper *mapper = new Mapper(i, &reducer_barrier, mappers_result[i]);
+        Mapper *mapper = new Mapper(i, &reducer_barrier, mappers_result[i],
+                                    files, file_mutexes, parsed_file);
         mappers.push_back(mapper);
     }
 
@@ -113,7 +118,6 @@ int main(int argc, char **argv) {
         reducers.push_back(reducer);
     }
 
-
     // Allocate memory for the array of threads.
     pthread_t *threads;
     try {
@@ -122,6 +126,8 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Allocation failed.\n");
         exit(-1);
     }
+
+    cout << "GOT HERE\n";
 
     // Launch the worker threads.
     for (int i = 0; i < mappers_cnt + reducers_cnt; i++) {
@@ -150,8 +156,24 @@ int main(int argc, char **argv) {
     }
 
 
+    int checkParsed = false;
+    for (int i = 0; i < files.size(); i++) {
+        if (!parsed_file[i]) {
+            checkParsed = true;
+            cout << "File " << i << " not parsed\n";
+        }
+    }
+
+    if (!checkParsed) {
+        cout << "All files parsed.\n";
+    }
+
     // Free resources.
     delete[] threads;
+
+    for (pthread_mutex_t* mutex : file_mutexes) {
+        pthread_mutex_destroy(mutex);
+    }
 
     for (long unsigned int i = 0; i < mappers.size(); i++) {
         delete mappers[i];
@@ -164,10 +186,12 @@ int main(int argc, char **argv) {
     pthread_barrier_destroy(&reducer_barrier);
 
 
-    for (int i = 0; i < mappers_cnt; i++) {
-        cout << "Results of mapper_" << i << ": ";
-        cout << "mapper_" << i << "[tudor] = " << mappers_result[i]["tudor"] << "\n";
-    }
+    // for (int i = 0; i < mappers_cnt; i++) {
+    //     cout << "Results of mapper_" << i << ": ";
+    //     cout << "mapper_" << i << "[tudor] = " << mappers_result[i]["tudor"] << "\n";
+    // }
+
+
 
     return 0;
 }
