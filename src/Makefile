@@ -19,9 +19,6 @@ main.o: main.cpp
 tema1: mapper.o reducer.o main.o
 	$(CC) $(CFLAGS) mapper.o reducer.o main.o -o tema1 -lpthread
 
-run:
-	./tema1
-
 clean:
 	rm -f *.o $(TARGETS)
 

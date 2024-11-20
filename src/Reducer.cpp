@@ -6,15 +6,17 @@ using namespace std;
 
 
 Reducer::Reducer(int id, pthread_barrier_t *reducer_barrier,
-                std::vector<std::map<std::string, int>> &mappers_result):
+                 std::vector<std::map<std::string, int>> &mappers_result):
                 mappers_result(mappers_result) {
     this->id = id;
     this->reducer_barrier = reducer_barrier;
     this->mappers_result = mappers_result;
 }
 
+
 Reducer::~Reducer() {
 }
+
 
 void Reducer::execute_reduce() {
     // Wait until all the mappers finish their work.

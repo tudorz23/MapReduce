@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <vector>
 #include <map>
+#include <fstream>
 
 #include "Mapper.h"
 #include "Reducer.h"
@@ -10,6 +11,7 @@
 using namespace std;
 
 
+// Thread function that "launches" a mapper.
 void *execute_map(void *arg) {
     Mapper *mapper = (Mapper*) arg;
 
@@ -19,6 +21,7 @@ void *execute_map(void *arg) {
 }
 
 
+// Thread function that "launches" a reducer.
 void *execute_reduce(void *arg) {
     Reducer *reducer = (Reducer*) arg;
 
@@ -28,12 +31,22 @@ void *execute_reduce(void *arg) {
 }
 
 
-void change_map(map<string, int> &testMap) {
-    map<string, int> &likeClass = testMap;
+// Open the file passed as command-line argument and read the input files.
+void get_input_files(const string& user_file, vector<string> &files) {
+    // Open the file.
+    ifstream fin(user_file);
 
-    cout << "From func: " << likeClass["tudor"] << "\n";
-    likeClass["tudor"] = 14;
-    cout << "From func: " << likeClass["tudor"] << "\n";
+    int entries;
+    fin >> entries;
+
+    string line;
+
+    for (int i = 0; i < entries; i++) {
+        fin >> line;
+        files.push_back(line);
+    }
+
+    fin.close();
 }
 
 
@@ -61,18 +74,22 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    // Allocate memory for the array of threads.
-    pthread_t *threads;
-    try {
-        threads = new pthread_t[mappers_cnt + reducers_cnt];
-    } catch (bad_alloc &exception) {
-        fprintf(stderr, "Allocation failed.\n");
-        exit(-1);
+    // Get the input files.
+    vector<string> files;
+    get_input_files(argv[3], files);
+
+    cout << "File cnt: " << files.size() << "\n";
+    for (const string& file : files) {
+        cout << "in for: ";
+        cout << file << "\n";
     }
+    cout << "\n";
+
 
     // Barrier that doesn't allow reducers to start before all the mappers finish.
     pthread_barrier_t reducer_barrier;
     pthread_barrier_init(&reducer_barrier, NULL, mappers_cnt + reducers_cnt);
+
 
     // Create the mappers result array.
     vector<map<string, int>> mappers_result;
@@ -80,6 +97,7 @@ int main(int argc, char **argv) {
         map<string, int> result;
         mappers_result.push_back(result);
     }
+
 
     // Create mapper objects.
     vector<Mapper*> mappers;
@@ -93,6 +111,16 @@ int main(int argc, char **argv) {
     for (int i = 0; i < reducers_cnt; i++) {
         Reducer *reducer = new Reducer(i, &reducer_barrier, mappers_result);
         reducers.push_back(reducer);
+    }
+
+
+    // Allocate memory for the array of threads.
+    pthread_t *threads;
+    try {
+        threads = new pthread_t[mappers_cnt + reducers_cnt];
+    } catch (bad_alloc &exception) {
+        fprintf(stderr, "Allocation failed.\n");
+        exit(-1);
     }
 
     // Launch the worker threads.
@@ -121,6 +149,7 @@ int main(int argc, char **argv) {
         }
     }
 
+
     // Free resources.
     delete[] threads;
 
@@ -136,7 +165,7 @@ int main(int argc, char **argv) {
 
 
     for (int i = 0; i < mappers_cnt; i++) {
-        cout << "Results of mapper [" << i << "]: ";
+        cout << "Results of mapper_" << i << ": ";
         cout << "mapper_" << i << "[tudor] = " << mappers_result[i]["tudor"] << "\n";
     }
 

@@ -5,8 +5,8 @@
 using namespace std;
 
 
-Mapper::Mapper(int id, pthread_barrier_t *reducer_barrier, std::map<std::string, int> &result):
-                result(result) {
+Mapper::Mapper(int id, pthread_barrier_t *reducer_barrier,
+               std::map<std::string, int> &result): result(result) {
     this->id = id;
     this->reducer_barrier = reducer_barrier;
 }
