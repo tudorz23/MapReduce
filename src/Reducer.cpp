@@ -26,8 +26,8 @@ void Reducer::execute_reduce() {
     // Wait until all the mappers finish their work.
     pthread_barrier_wait(reducer_barrier);
 
-    printf("Hello from reducer <%d>: ", id);
-    printf("I take care of letters from %c to %c.\n", start_char, end_char);
+    // printf("Hello from reducer <%d>: ", id);
+    // printf("I take care of letters from %c to %c.\n", start_char, end_char);
 
     // Create a map that will contain, for each letter that the reducer is
     // responsible for, all the words that begin with that letter and
@@ -58,7 +58,18 @@ void Reducer::execute_reduce() {
     // For every character, sort its words by the number of files they appear in
     // and write to the output file.
 
-    for (auto &[c, words] : words_by_char) {
+    for (char c = start_char; c <= end_char; c++) {
+        // Check if the c is in the words_by_char map.
+        if (words_by_char.find(c) == words_by_char.end()) {
+            // Create an empty file.
+            ofstream out_file;
+            out_file.open(std::string(1, c) + ".txt");
+            out_file.close();
+            continue;
+        }
+
+        auto &words = words_by_char[c];
+
         // Create a vector to be able to sort these words with std::sort().
         vector<pair<string, set<int>>> all_words_with_c;
 
@@ -80,11 +91,20 @@ void Reducer::execute_reduce() {
         ofstream out_file;
         out_file.open(std::string(1, c) + ".txt");
 
-        for (auto &[word, files] : all_words_with_c) {
-            out_file << word << ": [";
+        for (size_t i = 0; i < all_words_with_c.size(); i++) {
+            auto &[word, files] = all_words_with_c[i];
 
-            for (auto &file : files) {
-                out_file << file;
+            out_file << word << ":[";
+
+            set<int>::iterator it = files.begin();
+
+            while (it != files.end()) {
+                out_file << *it;
+
+                it++;
+                if (it != files.end()) {
+                    out_file << " ";
+                }
             }
 
             out_file << "]\n";

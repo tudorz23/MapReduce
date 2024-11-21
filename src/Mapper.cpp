@@ -47,7 +47,7 @@ void Mapper::execute_map() {
     }
 
     // Signal that the work of this mapper is finished.
-    printf("Mapper %d ---- parsed %d files.\n", id, parsed_cnt);
+    // printf("Mapper %d ---- parsed %d files.\n", id, parsed_cnt);
     pthread_barrier_wait(reducer_barrier);
 }
 
