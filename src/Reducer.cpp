@@ -1,6 +1,7 @@
 #include "Reducer.h"
 
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -24,20 +25,39 @@ void Reducer::execute_reduce() {
 
     printf("Hello from reducer <%d>.\n", id);
 
-    // if (id == 0) {
-    //     printf("Reducer 0 checks mappers results.\n");
-    //     for (int i = 0; i < mappers_result.size(); i++) {
-    //         cout << "Results of mapper[" << i << "]:\n";
-    //
-    //         for (const auto &[key, value] : mappers_result[i]) {
-    //             cout << key << ": [";
-    //
-    //             for (auto &nr : value) {
-    //                 cout << nr << ", ";
-    //             }
-    //             cout << "]\n";
-    //         }
-    //         cout <<"\n";
-    //     }
-    // }
+    if (id == 0) {
+        ofstream out_file("partial_result.txt");
+
+        out_file << "Reducer 0 checks mappers results.\n";
+        for (int i = 0; i < mappers_result.size(); i++) {
+            out_file << "Results of mapper[" << i << "]:\n";
+
+            for (const auto &[key, value] : mappers_result[i]) {
+                out_file << key << ": [";
+
+                for (auto &nr : value) {
+                    out_file << nr << ", ";
+                }
+                out_file << "]\n";
+            }
+            out_file <<"\n";
+        }
+
+        out_file.close();
+
+        // printf("Reducer 0 checks mappers results.\n");
+        // for (int i = 0; i < mappers_result.size(); i++) {
+        //     cout << "Results of mapper[" << i << "]:\n";
+        //
+        //     for (const auto &[key, value] : mappers_result[i]) {
+        //         cout << key << ": [";
+        //
+        //         for (auto &nr : value) {
+        //             cout << nr << ", ";
+        //         }
+        //         cout << "]\n";
+        //     }
+        //     cout <<"\n";
+        // }
+    }
 }

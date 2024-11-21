@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
         file_mutexes.push_back(mutex);
     }
 
-    vector<bool> parsed_file(files.size(), false);
+    vector<int> parsed_file(files.size(), 0);
 
 
     // Barrier that doesn't allow reducers to start before all the mappers finish.
@@ -155,6 +155,10 @@ int main(int argc, char **argv) {
         if (!parsed_file[i]) {
             checkParsed = true;
             cout << "File " << i << " not parsed\n";
+        }
+        if (parsed_file[i] != 1) {
+            checkParsed = true;
+            cout << "File " << i << "parsed " << parsed_file[i] << " times.\n";
         }
     }
 

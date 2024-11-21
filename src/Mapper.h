@@ -16,7 +16,7 @@ public:
 
     std::vector<std::string> &files;
     std::vector<pthread_mutex_t*> &file_mutexes;
-    std::vector<bool> &parsed_file;
+    std::vector<int> &parsed_file;
 
 
 public:
@@ -24,7 +24,7 @@ public:
     Mapper(int id, pthread_barrier_t *reducer_barrier,
             std::map<std::string, std::set<int>> &result,
             std::vector<std::string> &files, std::vector<pthread_mutex_t*> &file_mutexes,
-            std::vector<bool> &parsed_file);
+            std::vector<int> &parsed_file);
 
     // Destructor
     ~Mapper();
