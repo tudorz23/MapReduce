@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
 
     // Create reducer objects.
     vector<Reducer*> reducers;
-    int proportion = 26 / reducers_cnt;
+    const int proportion = 26 / reducers_cnt;
 
     for (int i = 0; i < reducers_cnt; i++) {
         int start = i * proportion;
@@ -127,7 +127,8 @@ int main(int argc, char **argv) {
             end = (i + 1) * proportion - 1;
         }
 
-        Reducer *reducer = new Reducer(i, start, end, &reducer_barrier, mappers_result);
+        Reducer *reducer = new Reducer(i, 'a' + start, 'a' + end,
+                                        &reducer_barrier, mappers_result);
         reducers.push_back(reducer);
     }
 
@@ -161,21 +162,21 @@ int main(int argc, char **argv) {
     }
 
 
-    int checkParsed = false;
-    for (unsigned long int i = 0; i < files.size(); i++) {
-        if (!parsed_file[i]) {
-            checkParsed = true;
-            cout << "File " << i << " not parsed\n";
-        }
-        if (parsed_file[i] != 1) {
-            checkParsed = true;
-            cout << "File " << i << "parsed " << parsed_file[i] << " times.\n";
-        }
-    }
-
-    if (!checkParsed) {
-        cout << "All files parsed.\n";
-    }
+    // int checkParsed = false;
+    // for (unsigned long int i = 0; i < files.size(); i++) {
+    //     if (!parsed_file[i]) {
+    //         checkParsed = true;
+    //         cout << "File " << i << " not parsed\n";
+    //     }
+    //     if (parsed_file[i] != 1) {
+    //         checkParsed = true;
+    //         cout << "File " << i << "parsed " << parsed_file[i] << " times.\n";
+    //     }
+    // }
+    //
+    // if (!checkParsed) {
+    //     cout << "All files parsed.\n";
+    // }
 
     // Free resources.
     delete[] threads;

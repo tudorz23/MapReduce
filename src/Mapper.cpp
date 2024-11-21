@@ -25,7 +25,7 @@ Mapper::~Mapper() {
 
 void Mapper::execute_map() {
     // Dynamically choose a file to parse, starting from own id index.
-    int parsed_cnt = 0;
+    // int parsed_cnt = 0;
     for (int i = id; i < files.size(); i++) {
         // Atomically check if the file was already processed.
         bool should_parse = false;
@@ -43,11 +43,11 @@ void Mapper::execute_map() {
 
         // Parse the file.
         parse_file(i);
-        parsed_cnt++;
+        // parsed_cnt++;
     }
 
     // Signal that the work of this mapper is finished.
-    printf("Mapper %d ---- parsed %d files.\n", id, parsed_cnt);
+    // printf("Mapper %d ---- parsed %d files.\n", id, parsed_cnt);
     pthread_barrier_wait(reducer_barrier);
 }
 
