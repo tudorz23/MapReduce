@@ -23,7 +23,8 @@ public:
     // Constructor
     Mapper(int id, pthread_barrier_t *reducer_barrier,
             std::map<std::string, std::set<int>> &result,
-            std::vector<std::string> &files, std::vector<pthread_mutex_t*> &file_mutexes,
+            std::vector<std::string> &files,
+            std::vector<pthread_mutex_t*> &file_mutexes,
             std::vector<int> &parsed_file);
 
     // Destructor

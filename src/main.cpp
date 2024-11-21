@@ -115,8 +115,19 @@ int main(int argc, char **argv) {
 
     // Create reducer objects.
     vector<Reducer*> reducers;
+    int proportion = 26 / reducers_cnt;
+
     for (int i = 0; i < reducers_cnt; i++) {
-        Reducer *reducer = new Reducer(i, &reducer_barrier, mappers_result);
+        int start = i * proportion;
+        int end;
+
+        if (i == reducers_cnt - 1) {
+            end = 25;
+        } else {
+            end = (i + 1) * proportion - 1;
+        }
+
+        Reducer *reducer = new Reducer(i, start, end, &reducer_barrier, mappers_result);
         reducers.push_back(reducer);
     }
 
