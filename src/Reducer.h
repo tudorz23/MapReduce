@@ -12,8 +12,8 @@ class Reducer {
 public:
     int id;
 
-    int start;
-    int end;
+    char start_char;
+    char end_char;
 
     pthread_barrier_t *reducer_barrier;
 
@@ -23,7 +23,7 @@ public:
 
 public:
     // Constructor
-    Reducer(int id, int start, int end, pthread_barrier_t *reducer_barrier,
+    Reducer(int id, char start_char, char end_char, pthread_barrier_t *reducer_barrier,
             std::vector<std::map<std::string, std::set<int>>> &mappers_result);
 
     // Destructor

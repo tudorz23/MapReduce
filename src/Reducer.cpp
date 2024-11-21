@@ -2,16 +2,17 @@
 
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 using namespace std;
 
 
-Reducer::Reducer(int id, int start, int end, pthread_barrier_t *reducer_barrier,
+Reducer::Reducer(int id, char start_char, char end_char, pthread_barrier_t *reducer_barrier,
                  std::vector<std::map<std::string, std::set<int>>> &mappers_result):
                 mappers_result(mappers_result) {
     this->id = id;
-    this->start = start;
-    this->end = end;
+    this->start_char = start_char;
+    this->end_char = end_char;
     this->reducer_barrier = reducer_barrier;
     this->mappers_result = mappers_result;
 }
@@ -26,26 +27,70 @@ void Reducer::execute_reduce() {
     pthread_barrier_wait(reducer_barrier);
 
     printf("Hello from reducer <%d>: ", id);
-    printf("I take care of letters from %c to %c.\n", 'a' + start, 'a' + end);
+    printf("I take care of letters from %c to %c.\n", start_char, end_char);
 
-    // if (id == 0) {
-    //     ofstream out_file("partial_result.txt");
-    //
-    //     out_file << "Reducer 0 checks mappers results.\n";
-    //     for (int i = 0; i < mappers_result.size(); i++) {
-    //         out_file << "Results of mapper[" << i << "]:\n";
-    //
-    //         for (const auto &[key, value] : mappers_result[i]) {
-    //             out_file << key << ": [";
-    //
-    //             for (auto &nr : value) {
-    //                 out_file << nr << ", ";
-    //             }
-    //             out_file << "]\n";
-    //         }
-    //         out_file <<"\n";
-    //     }
-    //
-    //     out_file.close();
-    // }
+    // Create a map that will contain, for each letter that the reducer is
+    // responsible for, all the words that begin with that letter and
+    // a set with the files each word can be found in.
+    map<char, map<string, set<int>>> words_by_char;
+
+    // Iterate each mapper result.
+    for (auto &m_result : mappers_result) {
+        // Iterate all the words that were mapped by the mapper.
+        // The map ensures they are sorted alphabetically.
+        for (const auto &[word, files] : m_result) {
+            if (word[0] < start_char) {
+                // Has not reached the target letter interval.
+                continue;
+            }
+
+            if (word[0] > end_char) {
+                // Has passed the target letter interval.
+                break;
+            }
+
+            // In the target interval.
+            words_by_char[word[0]][word].insert(files.begin(), files.end());
+        }
+    }
+
+    // Now, the words_by_char map is fully populated.
+    // For every character, sort its words by the number of files they appear in
+    // and write to the output file.
+
+    for (auto &[c, words] : words_by_char) {
+        // Create a vector to be able to sort these words with std::sort().
+        vector<pair<string, set<int>>> all_words_with_c;
+
+        for (auto &[word, files] : words) {
+            all_words_with_c.push_back({word, files});
+        }
+
+        // Sort the words by the size of the set, and then alphabetically.
+        sort(all_words_with_c.begin(), all_words_with_c.end(),
+            [](const auto &a, const auto &b) {
+                if (a.second.size() == b.second.size()) {
+                    return a.first < b.first;
+                }
+
+                return a.second.size() > b.second.size();
+            });
+
+        // Write the results to the file of character c.
+        ofstream out_file;
+        out_file.open(std::string(1, c) + ".txt");
+
+        for (auto &[word, files] : all_words_with_c) {
+            out_file << word << ": [";
+
+            for (auto &file : files) {
+                out_file << file;
+            }
+
+            out_file << "]\n";
+        }
+
+        out_file.close();
+    }
+
 }
