@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include <pthread.h>
 #include <vector>
 #include <map>
@@ -8,6 +7,8 @@
 
 #include "Mapper.h"
 #include "Reducer.h"
+
+#define NR_OF_LETTERS 26
 
 using namespace std;
 
@@ -35,19 +36,25 @@ void *execute_reduce(void *arg) {
 // Open the file passed as command-line argument and read the input files.
 void get_input_files(const string& user_file, vector<string> &files) {
     // Open the file.
-    ifstream fin(user_file);
+    ifstream arg_file_in;
+    arg_file_in.open(user_file);
+
+    if (!arg_file_in.is_open()) {
+        cerr << "Failed to open the command-line file.\n";
+        exit(-1);
+    }
 
     int entries;
-    fin >> entries;
+    arg_file_in >> entries;
 
     string line;
 
     for (int i = 0; i < entries; i++) {
-        fin >> line;
+        arg_file_in >> line;
         files.push_back(line);
     }
 
-    fin.close();
+    arg_file_in.close();
 }
 
 
@@ -55,7 +62,7 @@ void get_input_files(const string& user_file, vector<string> &files) {
 int main(int argc, char **argv) {
     // Get the number of mappers and the number of reducers.
     if (argc != 4) {
-        cout << "Usage: " << argv[0] << " <MAPPERS_CNT> <REDUCERS_CNT> <INPUT_FILE>\n";
+        cerr << "Usage: " << argv[0] << " <MAPPERS_CNT> <REDUCERS_CNT> <INPUT_FILE>\n";
         exit(-1);
     }
 
@@ -65,14 +72,14 @@ int main(int argc, char **argv) {
     int mappers_cnt;
     r = sscanf(argv[1], "%d", &mappers_cnt);
     if (r != 1) {
-        fprintf(stderr, "Invalid number of mappers.\n");
+        cerr << "Invalid number of mappers.\n";
         exit(-1);
     }
 
     int reducers_cnt;
     r = sscanf(argv[2], "%d", &reducers_cnt);
     if (r != 1) {
-        fprintf(stderr, "Invalid number of reducers.\n");
+        cerr << "Invalid number of reducers.\n";
         exit(-1);
     }
 
@@ -81,14 +88,15 @@ int main(int argc, char **argv) {
     get_input_files(argv[3], files);
 
 
-    // Create one mutex for each file to dynamically split them to mappers.
+    // Create one mutex for each file to dynamically split them among mappers.
     vector<pthread_mutex_t*> file_mutexes;
-    for (unsigned long int i = 0; i < files.size(); i++) {
+    for (unsigned long i = 0; i < files.size(); i++) {
         pthread_mutex_t *mutex = new pthread_mutex_t;
         pthread_mutex_init(mutex, NULL);
         file_mutexes.push_back(mutex);
     }
 
+    // Flags to know if a file has already been parsed.
     vector<int> parsed_file(files.size(), 0);
 
 
@@ -115,14 +123,14 @@ int main(int argc, char **argv) {
 
     // Create reducer objects.
     vector<Reducer*> reducers;
-    const int proportion = 26 / reducers_cnt;
+    const int proportion = NR_OF_LETTERS / reducers_cnt;
 
     for (int i = 0; i < reducers_cnt; i++) {
         int start = i * proportion;
         int end;
 
         if (i == reducers_cnt - 1) {
-            end = 25;
+            end = NR_OF_LETTERS - 1;
         } else {
             end = (i + 1) * proportion - 1;
         }
@@ -146,7 +154,7 @@ int main(int argc, char **argv) {
         }
 
         if (r) {
-            fprintf(stderr, "Error creating thread %d.\n", i);
+            cerr << "Error creating thread " << i << "\n";
             exit(-1);
         }
     }
@@ -156,29 +164,13 @@ int main(int argc, char **argv) {
         r = pthread_join(threads[i], NULL);
 
         if (r) {
-            fprintf(stderr, "Error waiting for thread %d.\n", i);
+            cerr << "Error waiting for thread " << i << "\n";
             exit(-1);
         }
     }
 
 
-    // int checkParsed = false;
-    // for (unsigned long int i = 0; i < files.size(); i++) {
-    //     if (!parsed_file[i]) {
-    //         checkParsed = true;
-    //         cout << "File " << i << " not parsed\n";
-    //     }
-    //     if (parsed_file[i] != 1) {
-    //         checkParsed = true;
-    //         cout << "File " << i << "parsed " << parsed_file[i] << " times.\n";
-    //     }
-    // }
-    //
-    // if (!checkParsed) {
-    //     cout << "All files parsed.\n";
-    // }
-
-    // Free resources.
+    // Free manually allocated resources.
     delete[] threads;
 
     for (Mapper *mapper : mappers) {

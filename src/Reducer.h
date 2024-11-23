@@ -9,7 +9,7 @@
 
 
 class Reducer {
-public:
+private:
     int id;
 
     char start_char;
@@ -19,19 +19,16 @@ public:
 
     std::vector<std::map<std::string, std::set<int>>> &mappers_result;
 
-
-
 public:
-    // Constructor
+    // Constructor.
     Reducer(int id, char start_char, char end_char, pthread_barrier_t *reducer_barrier,
             std::vector<std::map<std::string, std::set<int>>> &mappers_result);
 
-    // Destructor
+    // Destructor.
     ~Reducer();
 
+    // Main method of a Reducer.
     void execute_reduce();
 };
-
-
 
 #endif /* REDUCER_H */

@@ -1,7 +1,7 @@
 #include "Mapper.h"
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 using namespace std;
 
@@ -11,8 +11,8 @@ Mapper::Mapper(int id, pthread_barrier_t *reducer_barrier,
                 std::vector<std::string> &files,
                 std::vector<pthread_mutex_t*> &file_mutexes,
                 std::vector<int> &parsed_file):
-                result(result), files(files), file_mutexes(file_mutexes),
-                parsed_file(parsed_file)
+                    result(result), files(files), file_mutexes(file_mutexes),
+                    parsed_file(parsed_file)
 {
     this->id = id;
     this->reducer_barrier = reducer_barrier;
@@ -25,8 +25,7 @@ Mapper::~Mapper() {
 
 void Mapper::execute_map() {
     // Dynamically choose a file to parse, starting from own id index.
-    // int parsed_cnt = 0;
-    for (int i = id; i < files.size(); i++) {
+    for (unsigned long i = id; i < files.size(); i++) {
         // Atomically check if the file was already processed.
         bool should_parse = false;
 
@@ -43,22 +42,26 @@ void Mapper::execute_map() {
 
         // Parse the file.
         parse_file(i);
-        // parsed_cnt++;
     }
 
     // Signal that the work of this mapper is finished.
-    // printf("Mapper %d ---- parsed %d files.\n", id, parsed_cnt);
     pthread_barrier_wait(reducer_barrier);
 }
 
 
 void Mapper::parse_file(const int index) {
-    ifstream fin(files[index]);
+    ifstream target_file_in;
+    target_file_in.open(files[index]);
+
+    if (!target_file_in.is_open()) {
+        cerr << "Failed to open file " << index + 1 << "\n";
+        exit(-1);
+    }
 
     string word;
-    const int real_index = index + 1;
+    const int real_index = index + 1; // Files are indexed from 1.
 
-    while (fin >> word) {
+    while (target_file_in >> word) {
         // Remove unwanted characters (only keep letters).
         string::iterator it = word.begin();
 
@@ -82,5 +85,5 @@ void Mapper::parse_file(const int index) {
         }
     }
 
-    fin.close();
+    target_file_in.close();
 }

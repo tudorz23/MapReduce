@@ -7,8 +7,9 @@
 #include <vector>
 #include <set>
 
+
 class Mapper {
-public:
+private:
     int id;
     pthread_barrier_t *reducer_barrier;
 
@@ -18,23 +19,22 @@ public:
     std::vector<pthread_mutex_t*> &file_mutexes;
     std::vector<int> &parsed_file;
 
-
 public:
-    // Constructor
+    // Constructor.
     Mapper(int id, pthread_barrier_t *reducer_barrier,
             std::map<std::string, std::set<int>> &result,
             std::vector<std::string> &files,
             std::vector<pthread_mutex_t*> &file_mutexes,
             std::vector<int> &parsed_file);
 
-    // Destructor
+    // Destructor.
     ~Mapper();
 
-
+    // Main method of a Mapper.
     void execute_map();
 
+private:
     void parse_file(const int index);
 };
-
 
 #endif /* MAPPER_H */
