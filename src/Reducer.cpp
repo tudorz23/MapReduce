@@ -99,9 +99,7 @@ void Reducer::execute_reduce() {
             exit(-1);
         }
 
-        for (unsigned long i = 0; i < all_words_with_c.size(); i++) {
-            auto &[word, files] = all_words_with_c[i];
-
+        for (const auto &[word, files] : all_words_with_c) {
             out_file << word << ":[";
 
             set<int>::iterator it = files.begin();

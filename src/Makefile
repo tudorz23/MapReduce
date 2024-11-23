@@ -22,4 +22,7 @@ tema1: mapper.o reducer.o main.o
 clean:
 	rm -f *.o $(TARGETS)
 
+pack:
+	zip -FSr 333CA_ZahariaMarius-Tudor_Tema1a.zip Makefile *.cpp *.h README.md
+
 .PHONY: all build clean pack
