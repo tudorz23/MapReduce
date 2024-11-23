@@ -10,7 +10,7 @@ Mapper::Mapper(int id, pthread_barrier_t *reducer_barrier,
                 std::map<std::string, std::set<int>> &result,
                 std::vector<std::string> &files,
                 std::vector<pthread_mutex_t*> &file_mutexes,
-                std::vector<int> &parsed_file):
+                std::vector<bool> &parsed_file):
                     result(result), files(files), file_mutexes(file_mutexes),
                     parsed_file(parsed_file)
 {
@@ -30,9 +30,9 @@ void Mapper::execute_map() {
         bool should_parse = false;
 
         pthread_mutex_lock(file_mutexes[i]);
-        if (parsed_file[i] == 0) {
+        if (!parsed_file[i]) {
             should_parse = true;
-            parsed_file[i]++;
+            parsed_file[i] = true;
         }
         pthread_mutex_unlock(file_mutexes[i]);
 

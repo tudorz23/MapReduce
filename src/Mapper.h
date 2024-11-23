@@ -17,7 +17,7 @@ private:
 
     std::vector<std::string> &files;
     std::vector<pthread_mutex_t*> &file_mutexes;
-    std::vector<int> &parsed_file;
+    std::vector<bool> &parsed_file;
 
 public:
     // Constructor.
@@ -25,7 +25,7 @@ public:
             std::map<std::string, std::set<int>> &result,
             std::vector<std::string> &files,
             std::vector<pthread_mutex_t*> &file_mutexes,
-            std::vector<int> &parsed_file);
+            std::vector<bool> &parsed_file);
 
     // Destructor.
     ~Mapper();

@@ -58,7 +58,6 @@ void get_input_files(const string& user_file, vector<string> &files) {
 }
 
 
-// TODO: Check if memory allocations succeeded.
 int main(int argc, char **argv) {
     // Get the number of mappers and the number of reducers.
     if (argc != 4) {
@@ -97,7 +96,7 @@ int main(int argc, char **argv) {
     }
 
     // Flags to know if a file has already been parsed.
-    vector<int> parsed_file(files.size(), 0);
+    vector<bool> parsed_file(files.size(), false);
 
 
     // Barrier that doesn't allow reducers to start before all the mappers finish.
